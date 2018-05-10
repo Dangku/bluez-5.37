@@ -142,6 +142,8 @@ int uart_speed(int s)
 
 int set_speed(int fd, struct termios *ti, int speed)
 {
+	printf("set uart speed to %d\n", speed);
+	
 	if (cfsetospeed(ti, uart_speed(speed)) < 0)
 		return -errno;
 
@@ -1144,6 +1146,9 @@ struct uart_t uart[] = {
 	{ "bcm43xx",    0x0000, 0x0000, HCI_UART_H4,   115200, 3000000,
 				FLOW_CTL, DISABLE_PM, NULL, bcm43xx, NULL  },
 
+	{ "bcm43xx-3wire", 0x0000, 0x0000, HCI_UART_3WIRE, 115200, 3000000,
+				0, DISABLE_PM, NULL, bcm43xx, NULL},
+
 	{ "ath3k",    0x0000, 0x0000, HCI_UART_ATH3K, 115200, 115200,
 			FLOW_CTL, DISABLE_PM, NULL, ath3k_ps, ath3k_pm  },
 
@@ -1290,7 +1295,7 @@ int main(int argc, char *argv[])
 {
 	struct uart_t *u = NULL;
 	int detach, printpid, raw, opt, i, n, ld, err;
-	int to = 10;
+	int to = 30;
 	int init_speed = 0;
 	int send_break = 0;
 	pid_t pid;

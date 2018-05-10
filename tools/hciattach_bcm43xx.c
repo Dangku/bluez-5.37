@@ -43,7 +43,7 @@
 #include "hciattach.h"
 
 #ifndef FIRMWARE_DIR
-#define FIRMWARE_DIR "/etc/firmware"
+#define FIRMWARE_DIR "/lib/firmware/ap6212"
 #endif
 
 #define FW_EXT ".hcd"
@@ -62,6 +62,8 @@ static int bcm43xx_read_local_name(int fd, char *name, size_t size)
 	unsigned char cmd[] = { HCI_COMMAND_PKT, 0x14, 0x0C, 0x00 };
 	unsigned char *resp;
 	unsigned int name_len;
+
+	printf("read local name\n");
 
 	resp = malloc(size + CC_MIN_SIZE);
 	if (!resp)
@@ -89,6 +91,8 @@ static int bcm43xx_read_local_name(int fd, char *name, size_t size)
 	strncpy(name, (char *) &resp[7], MIN(name_len, size));
 	name[size - 1] = 0;
 
+	printf("name is %s\n", name);
+
 	free(resp);
 	return 0;
 
@@ -101,6 +105,8 @@ static int bcm43xx_reset(int fd)
 {
 	unsigned char cmd[] = { HCI_COMMAND_PKT, 0x03, 0x0C, 0x00 };
 	unsigned char resp[CC_MIN_SIZE];
+
+	printf("bcm43xx reset\n");
 
 	if (write(fd, cmd, sizeof(cmd)) != sizeof(cmd)) {
 		fprintf(stderr, "Failed to write reset command\n");
@@ -116,6 +122,8 @@ static int bcm43xx_reset(int fd)
 		fprintf(stderr, "Failed to reset chip, command failure\n");
 		return -1;
 	}
+
+	printf("bcm43xx reset end\n");
 
 	return 0;
 }
@@ -305,12 +313,15 @@ static int bcm43xx_locate_patch(const char *dir_name,
 	DIR *dir;
 	int ret = -1;
 
+	printf("locate patch\n");
+
 	dir = opendir(dir_name);
 	if (!dir) {
 		fprintf(stderr, "Cannot open directory '%s': %s\n",
 				dir_name, strerror(errno));
 		return -1;
 	}
+
 
 	/* Recursively look for a BCM43XX*.hcd */
 	while (1) {
@@ -346,6 +357,8 @@ static int bcm43xx_locate_patch(const char *dir_name,
 		}
 	}
 
+	printf("locate patch dir=%s chip=%s location=%s\n", dir_name, chip_name, location);
+
 	closedir(dir);
 
 	return ret;
@@ -359,6 +372,8 @@ int bcm43xx_init(int fd, int def_speed, int speed, struct termios *ti,
 
 	printf("bcm43xx_init\n");
 
+	sleep(1);
+
 	if (bcm43xx_reset(fd))
 		return -1;
 
@@ -366,11 +381,8 @@ int bcm43xx_init(int fd, int def_speed, int speed, struct termios *ti,
 		return -1;
 
 	if (bcm43xx_locate_patch(FIRMWARE_DIR, chip_name, fw_path)) {
-		fprintf(stderr, "Patch not found, continue anyway\n");
+		fprintf(stderr, "Patch not found for %s, continue anyway\n", chip_name);
 	} else {
-		if (bcm43xx_set_speed(fd, ti, speed))
-			return -1;
-
 		if (bcm43xx_load_firmware(fd, fw_path))
 			return -1;
 
@@ -379,6 +391,8 @@ int bcm43xx_init(int fd, int def_speed, int speed, struct termios *ti,
 			perror("Can't set host baud rate");
 			return -1;
 		}
+
+		sleep(1);
 
 		if (bcm43xx_reset(fd))
 			return -1;
