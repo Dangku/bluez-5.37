@@ -1,0 +1,55 @@
+From c9055958af1dec734b66bf4c941ee7392034c958 Mon Sep 17 00:00:00 2001
+From: Simon Fels <simon.fels@canonical.com>
+Date: Wed, 2 Dec 2015 11:58:54 +0100
+Subject: [PATCH 5/5] audio/media: return empty string when player name is not
+ available
+
+If the name for the player is set as NULL we will crash later on
+so taking a valid default is required.
+
+Crash observed without this:
+
+Program terminated with signal SIGSEGV, Segmentation fault.
+0  strlen () at ../sysdeps/arm/armv6t2/strlen.S:85
+85      ../sysdeps/arm/armv6t2/strlen.S: No such file or directory.
+(gdb) bt
+0  strlen () at ../sysdeps/arm/armv6t2/strlen.S:85
+1  0xb6f13ebc in avrcp_handle_media_player_list (session=0xb8f339c0,
+    session=0xb8f339c0, end_item=<optimized out>, start_item=<optimized out>,
+    pdu=0xb8f43283) at profiles/audio/avrcp.c:1917
+2  avrcp_handle_get_folder_items (session=0xb8f339c0, pdu=0xb8f43283,
+    transaction=<optimized out>) at profiles/audio/avrcp.c:1968
+3  0xb6f13fb8 in handle_browsing_pdu (conn=<optimized out>,
+    transaction=<optimized out>, operands=0xb8f43283 "q\b",
+    operand_count=<optimized out>, user_data=0xb8f339c0)
+    at profiles/audio/avrcp.c:2028
+4  0xb6f0f088 in session_browsing_cb (chan=<optimized out>,
+    cond=<optimized out>, data=0xb8f3ba28) at profiles/audio/avctp.c:930
+5  0xb6e19e90 in g_main_dispatch (context=0xb8f28100)
+    at /build/buildd/glib2.0-2.44.1/./glib/gmain.c:3122
+6  g_main_context_dispatch (context=context@entry=0xb8f28100)
+    at /build/buildd/glib2.0-2.44.1/./glib/gmain.c:3737
+7  0xb6e1a114 in g_main_context_iterate (context=0xb8f28100,
+    block=block@entry=1, dispatch=dispatch@entry=1, self=<optimized out>)
+    at /build/buildd/glib2.0-2.44.1/./glib/gmain.c:3808
+8  0xb6e1a3b0 in g_main_loop_run (loop=0xb8f28030)
+    at /build/buildd/glib2.0-2.44.1/./glib/gmain.c:4002
+9  0xb6efef3e in main (argc=1, argv=0xbebdde04) at src/main.c:661
+---
+ profiles/audio/media.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+Index: bluez-5.37/profiles/audio/media.c
+===================================================================
+--- bluez-5.37.orig/profiles/audio/media.c
++++ bluez-5.37/profiles/audio/media.c
+@@ -1018,6 +1018,9 @@ static const char *get_player_name(void
+ {
+ 	struct media_player *mp = user_data;
+ 
++	if (!mp->name)
++		return "";
++
+ 	return mp->name;
+ }
+ 

@@ -1,0 +1,29 @@
+From d3056811f75aa788382f56848e3a871ae3cbbf33 Mon Sep 17 00:00:00 2001
+From: Simon Fels <simon.fels@canonical.com>
+Date: Thu, 11 Feb 2016 14:45:19 +0100
+Subject: [PATCH] profiles: audio: add big endian structure definition for LDAC
+ codec
+
+---
+ profiles/audio/a2dp-codecs.h | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/profiles/audio/a2dp-codecs.h b/profiles/audio/a2dp-codecs.h
+index e9da0bf..4fb5c0c 100644
+--- a/profiles/audio/a2dp-codecs.h
++++ b/profiles/audio/a2dp-codecs.h
+@@ -234,6 +234,11 @@ typedef struct {
+ 	uint8_t channel_mode:4;
+ } __attribute__ ((packed)) a2dp_aptx_t;
+ 
++typedef struct {
++	a2dp_vendor_codec_t info;
++	uint8_t unknown[2];
++} __attribute__ ((packed)) a2dp_ldac_t;
++
+ #else
+ #error "Unknown byte order"
+ #endif
+-- 
+2.5.0
+

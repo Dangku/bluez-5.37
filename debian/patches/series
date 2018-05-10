@@ -1,0 +1,19 @@
+0001-work-around-Logitech-diNovo-Edge-keyboard-firmware-i.patch
+bluetooth.conf.patch
+0001-Allow-using-obexd-without-systemd-in-the-user-sessio.patch
+0001-obex-Use-GLib-helper-function-to-manipulate-paths.patch
+change_path_of_hogsuspend.patch
+migrate_scripts_python3.patch
+
+# This currently stays specific for Ubuntu
+0001-obexd-plugins-import-PBAP-ebook-support-from-upstrea.patch
+0001-obexd-plugins-port-ebook-support-to-the-latest-EDS.patch
+0002-hostname-handle-chassis-type-handset.patch
+
+# The following patches are submitted upstream and can be
+# dropped with one of the next releases
+0003-tools-mpris-proxy-allow-user-to-specify-different-mp.patch
+0004-obexd-enable-ebook-backend-conditionally.patch
+0005-audio-media-return-empty-string-when-player-name-is-.patch
+0001-profiles-audio-add-big-endian-structure-definition-f.patch
+CVE-2017-1000250.patch

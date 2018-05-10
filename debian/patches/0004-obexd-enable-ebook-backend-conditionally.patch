@@ -1,0 +1,103 @@
+From 5acde5532f16e1bb8b354baee00f8fe71fc38e52 Mon Sep 17 00:00:00 2001
+From: Simon Fels <simon.fels@canonical.com>
+Date: Fri, 11 Sep 2015 19:01:52 +0200
+Subject: [PATCH 4/4] obexd: enable ebook backend conditionally
+
+EDS support was sitting around but wasn't usable cause it was not included
+in the build configuration. It is now put behind an additional configure
+switch. By default still the dummy backend is used.
+---
+ Makefile.obexd | 12 ++++++++----
+ configure.ac   | 12 ++++++++++++
+ 2 files changed, 20 insertions(+), 4 deletions(-)
+
+Index: bluez-5.37/Makefile.obexd
+===================================================================
+--- bluez-5.37.orig/Makefile.obexd
++++ bluez-5.37/Makefile.obexd
+@@ -39,8 +39,12 @@ obexd_builtin_sources += obexd/plugins/i
+ obexd_builtin_modules += pbap
+ obexd_builtin_sources += obexd/plugins/pbap.c \
+ 				obexd/plugins/vcard.h obexd/plugins/vcard.c \
+-				obexd/plugins/phonebook.h \
+-				obexd/plugins/phonebook-dummy.c
++				obexd/plugins/phonebook.h
++if PHONEBOOK_EBOOK
++obexd_builtin_sources += obexd/plugins/phonebook-ebook.c
++else
++obexd_builtin_sources += obexd/plugins/phonebook-dummy.c
++endif
+ endif
+ 
+ obexd_builtin_modules += mas
+@@ -81,14 +85,15 @@ obexd_src_obexd_SOURCES = $(btio_sources
+ 			obexd/src/map_ap.h
+ obexd_src_obexd_LDADD = lib/libbluetooth-internal.la \
+ 			gdbus/libgdbus-internal.la \
+-			@ICAL_LIBS@ @DBUS_LIBS@ @GLIB_LIBS@ -ldl
++			@ICAL_LIBS@ @EBOOK_LIBS@ @DBUS_LIBS@ @GLIB_LIBS@ -ldl
+ 
+ obexd_src_obexd_LDFLAGS = -Wl,--export-dynamic
+ 
+ obexd_src_obexd_CFLAGS = $(AM_CFLAGS) @GLIB_CFLAGS@ @DBUS_CFLAGS@ \
+-				@ICAL_CFLAGS@ -DOBEX_PLUGIN_BUILTIN \
++				@ICAL_CFLAGS@ @EBOOK_CFLAGS@ -DOBEX_PLUGIN_BUILTIN \
+ 				-DPLUGINDIR=\""$(obex_plugindir)"\" \
+-				-fPIC -D_FILE_OFFSET_BITS=64
++				-fPIC -D_FILE_OFFSET_BITS=64 \
++				-DEBOOK_API=@EBOOK_API@
+ 
+ obexd_src_obexd_CPPFLAGS = -I$(builddir)/lib -I$(builddir)/obexd/src
+ 
+Index: bluez-5.37/configure.ac
+===================================================================
+--- bluez-5.37.orig/configure.ac
++++ bluez-5.37/configure.ac
+@@ -180,6 +180,11 @@ AC_ARG_ENABLE(cups, AC_HELP_STRING([--di
+                 [disable CUPS printer support]), [enable_cups=${enableval}])
+ AM_CONDITIONAL(CUPS, test "${enable_cups}" != "no")
+ 
++AC_ARG_ENABLE(phonebook-ebook, AC_HELP_STRING([--enable-phonebook-ebook],
++		[disable Phonebook support through EDS]),
++		[enable_phonebook_ebook=${enableval}])
++AM_CONDITIONAL(PHONEBOOK_EBOOK, test "${enable_phonebook_ebook}" = "yes")
++
+ AC_ARG_ENABLE(obex, AC_HELP_STRING([--disable-obex],
+ 		[disable OBEX profile support]), [enable_obex=${enableval}])
+ if (test "${enable_obex}" != "no"); then
+@@ -187,6 +192,19 @@ if (test "${enable_obex}" != "no"); then
+ 					AC_MSG_ERROR(libical is required))
+ 	AC_SUBST(ICAL_CFLAGS)
+ 	AC_SUBST(ICAL_LIBS)
++
++	if (test "${enable_phonebook_ebook}" = "yes"); then
++		PKG_CHECK_MODULES(EBOOK, libebook-1.2 >= 3.12,
++			ebook_api="12",
++			AC_MSG_ERROR(libebook-1.2-12 or greater is required))
++
++		PKG_CHECK_MODULES(EBOOK16, libebook-1.2 >= 3.16,
++			ebook_api="16", dummy=yes)
++
++		AC_SUBST(EBOOK_API, "${ebook_api}")
++		AC_SUBST(EBOOK_CFLAGS)
++		AC_SUBST(EBOOK_LIBS)
++	fi
+ fi
+ AM_CONDITIONAL(OBEX, test "${enable_obex}" != "no")
+ 
+Index: bluez-5.37/obexd/plugins/phonebook-ebook.c
+===================================================================
+--- bluez-5.37.orig/obexd/plugins/phonebook-ebook.c
++++ bluez-5.37/obexd/plugins/phonebook-ebook.c
+@@ -380,7 +380,11 @@ static GSList *traverse_sources(GSList *
+ {
+ 	GError *gerr = NULL;
+ 
++#if EBOOK_API >= 16
+ 	EClient *client = e_book_client_connect_sync(source, -1, NULL, &gerr);
++#else
++	EClient *client = e_book_client_connect_sync(source, NULL, &gerr);
++#endif
+ 	if (client == NULL) {
+ 		error("Can't create user's address book: %s",
+ 							gerr->message);
