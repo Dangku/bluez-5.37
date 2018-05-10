@@ -1,0 +1,11 @@
+#bluetooth-up.service
+[Unit]
+Description=Bluetooth Test on
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/bpi-bt-test.sh
+
+[Install]
+WantedBy=multi-user.target
