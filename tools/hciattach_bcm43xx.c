@@ -322,7 +322,6 @@ static int bcm43xx_locate_patch(const char *dir_name,
 		return -1;
 	}
 
-
 	/* Recursively look for a BCM43XX*.hcd */
 	while (1) {
 		struct dirent *entry = readdir(dir);

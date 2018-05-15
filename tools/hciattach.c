@@ -1219,6 +1219,23 @@ static int init_uart(char *dev, struct uart_t *u, int send_break, int raw)
 
 	cfmakeraw(&ti);
 
+#if 1
+	ti.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP
+                | INLCR | IGNCR | ICRNL | IXON);
+        ti.c_oflag &= ~OPOST;
+        ti.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+        ti.c_cflag &= ~(CSIZE | PARENB);
+	ti.c_cflag &= ~CRTSCTS;
+        ti.c_cflag |= CS8;
+
+	if (tcsetattr(fd, TCSANOW, &ti) < 0) {
+                perror("Can't set port settings");
+                goto fail;
+        }
+
+	tcflush(fd, TCIOFLUSH);
+#endif
+
 	ti.c_cflag |= CLOCAL;
 	if (u->flags & FLOW_CTL)
 		ti.c_cflag |= CRTSCTS;
