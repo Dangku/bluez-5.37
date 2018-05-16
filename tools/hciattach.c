@@ -1219,6 +1219,8 @@ static int init_uart(char *dev, struct uart_t *u, int send_break, int raw)
 
 	cfmakeraw(&ti);
 
+	sleep(1);
+
 #if 1
 	ti.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP
                 | INLCR | IGNCR | ICRNL | IXON);
