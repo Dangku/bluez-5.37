@@ -1,14 +1,20 @@
 #!/bin/sh
 
+BOARD=$(bpi-hw)
+
 state=`cat /sys/class/rfkill/rfkill0/state`
-echo "[BPI] bt rfkill state is $state"
+echo "[$BOARD] bt rfkill state is $state"
+
+PORT=ttyS1
+if [ "x$BOARD" = "xbpi-m2u" ]; then
+	PORT=ttyS3
+fi
 
 #if [ $state -eq 0 ]; then
-	echo "[BPI] bluetooth poweroff now, start poweron"
-	#rfkill block bluetooth
-	#rfkill unblock bluetooth
-	#sleep 1
+        echo "[BPI] bluetooth poweroff now, start poweron"
+        rfkill block bluetooth
+        rfkill unblock bluetooth
+        sleep 1
 #fi
 
-/usr/bin/hciattach /dev/ttyS3 bcm43xx 1500000 noflow -
-#/usr/bin/hciattach /dev/ttyS3 bcm43xx 1500000 flow - b8:27:3b:bf:21:00
+/usr/bin/hciattach /dev/$PORT bcm43xx 1500000 flow
