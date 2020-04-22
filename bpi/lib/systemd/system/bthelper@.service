@@ -1,0 +1,8 @@
+[Unit]
+Description=Bluetooth hci up helper
+Requires=bluetooth.service
+After=bluetooth.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/bthelper %I

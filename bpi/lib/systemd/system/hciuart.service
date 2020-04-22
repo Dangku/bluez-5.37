@@ -1,8 +1,7 @@
 [Unit]
 Description=Configure Bluetooth Modems connected by UART
 Before=bluetooth.service
-#Wants=
-After=network.target
+After=setserial.service
 
 [Service]
 Type=forking
